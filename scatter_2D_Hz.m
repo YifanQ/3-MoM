@@ -1,5 +1,7 @@
 clear all; close all; clc;
 
+plotH_out = false;
+
 %% EM parameters ==================================================
 epsilon_    =8.854e-012; %8.854 187 817
 mu_         =1.257e-006; %1.256 637 061
@@ -23,7 +25,7 @@ exp_gamma = 1.7810724179901979852; % == exp(0.577215664901532 the Euler–Maschero
 %% plot |G0|
 % k0r = linspace(0,4*pi, 500);
 % G0_k0r = G0(k0r);
-% figure(1); 
+% figure(1);
 % hold on;
 % plot(k0r,abs (G0_k0r), 'DisplayName', '|G0|');
 % plot(k0r,real(G0_k0r), 'DisplayName', 'real(G0)');
@@ -55,32 +57,70 @@ figure(2); hold on;
 plot(theta*(180/pi),abs(J)/H_inc_0); xlim([0, 360]); xlabel('\phi (degree)');ylabel('J_s / H_0')
 xticks([0, 90, 180, 270, 360]);
 
+%% Ez at rho for sigma_2D
+rho_list = lambda_*[10, 100, 1000];
+figure(10); hold on;
+for ii = 1:length(rho_list)
+    rho = rho_list(ii);
+    N1 = 1000;
+    theta1 = linspace(0, 2*pi, N1+1).'; theta1(end) = []; % colum
+    x_out = rho*cos(theta1); y_out = rho*sin(theta1);
+    R = sqrt((x_out-xx.').^2 + (y_out-yy.').^2);    
+    term2 = ((x_out - xx.').*norm_n_x + (y_out - yy.').*norm_n_y) ./ R;
+    % scattered field
+    H_scatt = (besselh(1,2,k0*R).*term2)*J*(-k0/4j*s_n);
+    sigma_2D = 2*pi*rho*abs( H_scatt/(1/Z_0) ).^2;    
+    % plot(theta1*(180/pi),sigma_2D, 'DisplayName', sprintf('\\rho = %d',rho));
+    plot(theta1*(180/pi),10*log10(sigma_2D/lambda_), 'DisplayName', sprintf('\\rho = %d \\lambda',rho));
+end
+xlim([0, 360]); xlabel('\phi (degree)');
+% ylabel('\sigma_{2D}');
+ylabel('\sigma_{2D}/\lambda (dB)');
+xticks([0, 90, 180, 270, 360]); 
+legend('show');
+
+if ~plotH_out
+    return 
+end
 
 %% Hz else where
 N2 = 1000+1;
 x_out = lambda_*linspace(-5,+5,N2).';
 y_out = lambda_*linspace(-5,+5,N2).';
-H_out = complex(zeros(N2, N2));
+H_scatt = complex(zeros(N2, N2));
+H_full = complex(zeros(N2, N2));
 h = lambda_*(+5-(-5))/N2;
 
 for jj = 1:N2
     y_out0 = y_out(jj);
     mask = sqrt(x_out.^2 + y_out0.^2) <= r+0.5*h;
- 
+
     R = sqrt((x_out-xx.').^2 + (y_out0-yy.').^2);
-    % full field
     term2 = ((x_out - xx.').*norm_n_x + (y_out0 - yy.').*norm_n_y) ./ R;
-    % H_out(:, jj)= 1/Z_0*exp(-1j*k0*x_out) + (besselh(1,2,k0*R).*term2)*J*(-k0/4j*s_n);
     % scattered field
-    H_out(:, jj)= (besselh(1,2,k0*R).*term2)*J*(-k0/4j*s_n);
-    aaa=besselh(1,2,k0*R);
-    H_out(mask, jj) = NaN;
+    H_scatt(:, jj) = (besselh(1,2,k0*R).*term2)*J*(-k0/4j*s_n);
+    % test_time = besselh(1,2,k0*R);
+
+    % full field
+    H_full (:, jj) = 1/Z_0*exp(-1j*k0*x_out) + H_scatt(:, jj);
+
+    H_scatt(mask, jj) = NaN;
+    H_full (mask, jj) = NaN;
 end
 
-figure(3); hold on;
-surf(x_out, y_out, abs(H_out.')*Z_0, 'EdgeColor','none','LineStyle','none','FaceLighting','gouraud'); 
+% figure(3); hold on;
+% surf(x_out, y_out, abs(H_scatt.')*Z_0, 'EdgeColor','none','LineStyle','none','FaceLighting','gouraud');
+% % The 'phong' value has been removed. Use 'gouraud' instead.
+% view(2);xlim([-5, +5]);ylim([-5, +5]);xticks([-5:1:5]);yticks([-5:1:5]);colorbar;axis('image');
+
+plotMat(3, x_out, y_out, abs(H_scatt.')*Z_0); % or H_scatt, @abs);
+plotMat(4, x_out, y_out, abs(H_full.' )*Z_0);
+plotMat(5, x_out, y_out,real(H_scatt.')*Z_0);
+plotMat(6, x_out, y_out,real(H_full.' )*Z_0);
+
+function plotMat(figID, x_out, y_out, mat)
+figure(figID); hold on;
+surf(x_out, y_out, mat, 'EdgeColor','none','LineStyle','none','FaceLighting','gouraud');
 % The 'phong' value has been removed. Use 'gouraud' instead.
 view(2);xlim([-5, +5]);ylim([-5, +5]);xticks([-5:1:5]);yticks([-5:1:5]);colorbar;axis('image');
-
-
-
+end
