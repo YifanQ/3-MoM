@@ -40,15 +40,12 @@ s_n = r*d_theta;
 xx = r*cos(theta); yy = r*sin(theta);
 
 R = sqrt((xx - xx.').^2 + (yy - yy.').^2); % |rho_m - rho_n|
-norm_n_x = cos(theta).';
-norm_n_y = sin(theta).';
-term2 = ((xx - xx.').*norm_n_x + (yy - yy.').*norm_n_y) ./ R;  % m as | ; n as --
-Zmn = (k0*s_n/4j)*besselh(1,2,k0*R).*term2;
+Zmn = (k0*Z_0*s_n/4)*besselh(0,2,k0*R);
 
-diag_value = -1/2;
+diag_value = (k0*Z_0*s_n/4)*(  1-1j*(2/pi)*log(k0*s_n*exp_gamma/4/exp(1.0))  );
 Zmn(1:1+N:end) = diag_value;
 
-Vm = 1/Z_0*exp(-1j*k0*xx); % add a phase shift
+Vm = exp(-1j*k0*xx);
 
 J = Zmn \ Vm;
 figure(2); hold on;
@@ -56,29 +53,26 @@ plot(theta*(180/pi),abs(J)/H_inc_0); xlim([0, 360]); xlabel('\phi (degree)');yla
 xticks([0, 90, 180, 270, 360]);
 
 
-%% Hz else where
+%% Ez else where
 N2 = 1000+1;
 x_out = lambda_*linspace(-5,+5,N2).';
 y_out = lambda_*linspace(-5,+5,N2).';
-H_out = complex(zeros(N2, N2));
-h = lambda_*(+5-(-5))/N2;
+E_out = complex(zeros(N2, N2));
 
 for jj = 1:N2
     y_out0 = y_out(jj);
-    mask = sqrt(x_out.^2 + y_out0.^2) <= r+0.5*h;
+    mask = sqrt(x_out.^2 + y_out0.^2) <= r;
  
     R = sqrt((x_out-xx.').^2 + (y_out0-yy.').^2);
+    % scattered field only
+    % E_out(:, jj) = G0(k0*R)*J*(-1j*k0*Z_0*s_n); 
     % full field
-    term2 = ((x_out - xx.').*norm_n_x + (y_out0 - yy.').*norm_n_y) ./ R;
-    % H_out(:, jj)= 1/Z_0*exp(-1j*k0*x_out) + (besselh(1,2,k0*R).*term2)*J*(-k0/4j*s_n);
-    % scattered field
-    H_out(:, jj)= (besselh(1,2,k0*R).*term2)*J*(-k0/4j*s_n);
-    aaa=besselh(1,2,k0*R);
-    H_out(mask, jj) = NaN;
+    E_out(:, jj) = G0(k0*R)*J*(-1j*k0*Z_0*s_n) + exp(-1j*k0*x_out)+E_out(x_idx, y_idx);
+    E_out(mask, jj) = NaN;
 end
 
 figure(3); hold on;
-surf(x_out, y_out, abs(H_out.')*Z_0, 'EdgeColor','none','LineStyle','none','FaceLighting','gouraud'); 
+surf(x_out, y_out, abs(E_out.'), 'EdgeColor','none','LineStyle','none','FaceLighting','gouraud'); 
 % The 'phong' value has been removed. Use 'gouraud' instead.
 view(2);xlim([-5, +5]);ylim([-5, +5]);xticks([-5:1:5]);yticks([-5:1:5]);colorbar;axis('image');
 

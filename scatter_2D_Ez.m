@@ -42,7 +42,7 @@ xx = r*cos(theta); yy = r*sin(theta);
 R = sqrt((xx - xx.').^2 + (yy - yy.').^2); % |rho_m - rho_n|
 Zmn = (k0*Z_0*s_n/4)*besselh(0,2,k0*R);
 
-diag_value = (k0*Z_0*s_n/4)*(  1-1j*(2/pi)*log(k0*s_n*exp_gamma/4/exp(1.0))  )
+diag_value = (k0*Z_0*s_n/4)*(  1-1j*(2/pi)*log(k0*s_n*exp_gamma/4/exp(1.0))  );
 Zmn(1:1+N:end) = diag_value;
 
 Vm = exp(-1j*k0*xx);
@@ -64,7 +64,10 @@ for jj = 1:N2
     mask = sqrt(x_out.^2 + y_out0.^2) <= r;
  
     R = sqrt((x_out-xx.').^2 + (y_out0-yy.').^2);
-    E_out(:, jj)=G0(k0*R)*J*(-1j*k0*Z_0*s_n); %exp(-1j*k0*x_out)+E_out(x_idx, y_idx);
+    % scattered field only
+    % E_out(:, jj) = G0(k0*R)*J*(-1j*k0*Z_0*s_n); 
+    % full field
+    E_out(:, jj) = G0(k0*R)*J*(-1j*k0*Z_0*s_n) + exp(-1j*k0*x_out); % E_out(x_idx, y_idx)
     E_out(mask, jj) = NaN;
 end
 
