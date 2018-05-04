@@ -61,9 +61,20 @@ J = Zmn \ Vm;
 mode = 'TE Hz';
 idealJ;
 
-figure(2); hold on;
+figure(2);
+subplot(4,1,[1 2 3]); hold on;
 plot(theta*(180/pi),abs(J)/H_inc_0); xlim([0, 360]); xlabel('\phi (degree)');ylabel('J_s / H_0')
 xticks([0, 90, 180, 270, 360]);
+
+figure(2);
+subplot(4,1,4); hold on;
+plot(theta*(180/pi),( abs(J-J_ideal) ) / H_inc_0); xlim([0, 360]); xlabel('\phi (degree)');ylabel('|J_s-J^*_s| / H_0')
+xticks([0, 90, 180, 270, 360]);
+
+J_error = norm(J-J_ideal)/norm(J_ideal);
+subplot(4,1,[1 2 3]);
+title(sprintf('surface J_{\\phi}, # of unknowns = %d, error ||J-J^*||_2 / ||J^*||_2 = %0.3f', N, J_error))
+
 
 %% Ez at rho for sigma_2D
 rho_list = lambda_*[10, 100, 1000];
