@@ -16,11 +16,12 @@ frequency   = c_/lambda_;
 omega       = 2*pi*frequency;
 k0          = 2*pi/lambda_; % = 2*pi*frequency/c_ = omega/c_;
 
-H_inc_0 = 1/Z_0;
+E_inc_0 = 1.0;
+H_inc_0 = E_inc_0/Z_0;
 
 % Anonymous Functions: sqr = @(x) x.^2; sqr(5) % we get 25
-G0 = @(k0r) (1/4j)*besselh(0,2,k0r);
-exp_gamma = 1.7810724179901979852; % == exp(0.577215664901532 the Euler–Mascheroni constant)
+G0 = @(k0r) (1/4j)*besselh(0,2,k0r); %-% Equ 10.2.4
+exp_gamma = 1.7810724179901979852; % == exp(0.577215664901532 the Eulerâ€“Mascheroni constant)
 
 %% plot |G0|
 % k0r = linspace(0,4*pi, 500);
@@ -33,26 +34,33 @@ exp_gamma = 1.7810724179901979852; % == exp(0.577215664901532 the Euler–Maschero
 % legend('show'); % kind of different in 2018a
 
 %%
-r = 1*lambda_;
 N = 500;
-theta = linspace(0, 2*pi, N+1).'; theta(end) = []; % colum
+theta = linspace(0, 2*pi, N+1).'; theta(end) = []; % column
 d_theta = 2*pi/N;
+
+r = 1*lambda_;
 s_n = r*d_theta;
 % [-d_theta/2, +d_theta/2], ...
 xx = r*cos(theta); yy = r*sin(theta);
 
 R = sqrt((xx - xx.').^2 + (yy - yy.').^2); % |rho_m - rho_n|
+
 norm_n_x = cos(theta).';
 norm_n_y = sin(theta).';
 term2 = ((xx - xx.').*norm_n_x + (yy - yy.').*norm_n_y) ./ R;  % m as | ; n as --
-Zmn = (k0*s_n/4j)*besselh(1,2,k0*R).*term2;
 
+%-% Equ 10.2.35
+Zmn = (k0*s_n/4j)*besselh(1,2,k0*R).*term2;
 diag_value = -1/2;
 Zmn(1:1+N:end) = diag_value;
 
-Vm = 1/Z_0*exp(-1j*k0*xx); % add a phase shift
+Vm = H_inc_0*exp(-1j*k0*xx); % for a plane wave, the E and H are in the same phase
+%c.f. https://en.wikipedia.org/wiki/Electromagnetic_radiation
 
 J = Zmn \ Vm;
+mode = 'TE Hz';
+idealJ;
+
 figure(2); hold on;
 plot(theta*(180/pi),abs(J)/H_inc_0); xlim([0, 360]); xlabel('\phi (degree)');ylabel('J_s / H_0')
 xticks([0, 90, 180, 270, 360]);
@@ -62,25 +70,28 @@ rho_list = lambda_*[10, 100, 1000];
 figure(10); hold on;
 for ii = 1:length(rho_list)
     rho = rho_list(ii);
+
     N1 = 1000;
-    theta1 = linspace(0, 2*pi, N1+1).'; theta1(end) = []; % colum
+    theta1 = linspace(0, 2*pi, N1+1).'; theta1(end) = []; % column
+
     x_out = rho*cos(theta1); y_out = rho*sin(theta1);
-    R = sqrt((x_out-xx.').^2 + (y_out-yy.').^2);    
+
+    R = sqrt((x_out-xx.').^2 + (y_out-yy.').^2);
     term2 = ((x_out - xx.').*norm_n_x + (y_out - yy.').*norm_n_y) ./ R;
     % scattered field
     H_scatt = (besselh(1,2,k0*R).*term2)*J*(-k0/4j*s_n);
-    sigma_2D = 2*pi*rho*abs( H_scatt/(1/Z_0) ).^2;    
+    sigma_2D = 2*pi*rho*abs( H_scatt ).^2 / abs(H_inc_0).^2;
     % plot(theta1*(180/pi),sigma_2D, 'DisplayName', sprintf('\\rho = %d',rho));
     plot(theta1*(180/pi),10*log10(sigma_2D/lambda_), 'DisplayName', sprintf('\\rho = %d \\lambda',rho));
 end
 xlim([0, 360]); xlabel('\phi (degree)');
 % ylabel('\sigma_{2D}');
 ylabel('\sigma_{2D}/\lambda (dB)');
-xticks([0, 90, 180, 270, 360]); 
+xticks([0, 90, 180, 270, 360]);
 legend('show');
 
 if ~plotH_out
-    return 
+    return
 end
 
 %% Hz else where
@@ -102,7 +113,7 @@ for jj = 1:N2
     % test_time = besselh(1,2,k0*R);
 
     % full field
-    H_full (:, jj) = 1/Z_0*exp(-1j*k0*x_out) + H_scatt(:, jj);
+    H_full (:, jj) = H_scatt(:, jj) + H_inc_0*exp(-1j*k0*x_out);
 
     H_scatt(mask, jj) = NaN;
     H_full (mask, jj) = NaN;
@@ -113,10 +124,10 @@ end
 % % The 'phong' value has been removed. Use 'gouraud' instead.
 % view(2);xlim([-5, +5]);ylim([-5, +5]);xticks([-5:1:5]);yticks([-5:1:5]);colorbar;axis('image');
 
-plotMat(3, x_out, y_out, abs(H_scatt.')*Z_0); % or H_scatt, @abs);
-plotMat(4, x_out, y_out, abs(H_full.' )*Z_0);
-plotMat(5, x_out, y_out,real(H_scatt.')*Z_0);
-plotMat(6, x_out, y_out,real(H_full.' )*Z_0);
+plotMat(3, x_out, y_out, abs(H_scatt.')/H_inc_0); % or H_scatt, @abs);
+plotMat(4, x_out, y_out, abs(H_full.' )/H_inc_0);
+plotMat(5, x_out, y_out,real(H_scatt.')/H_inc_0);
+plotMat(6, x_out, y_out,real(H_full.' )/H_inc_0);
 
 function plotMat(figID, x_out, y_out, mat)
 figure(figID); hold on;
