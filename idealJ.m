@@ -19,9 +19,12 @@ bn = @(n, ka) -(1j)^(-n)*( ...
         b_n(n+maxN+1) = bn(n, ka);
     end
     figure(21);
-    plot(-maxN:maxN, real(b_n), -maxN:maxN, imag(b_n));
-    xlabel('index n');title('b_n');legend({'Re(b_n)','Im(b_n)'})
-
+    % plot(-maxN:maxN, real(b_n), -maxN:maxN, imag(b_n));
+    % xlabel('index n');title('b_n');legend({'Re(b_n)','Im(b_n)'})
+    plot(-maxN:maxN, abs(real(b_n)), -maxN:maxN, abs(imag(b_n)));
+    xlabel('index n');title('b_n');legend({'|Re(b_n)|','|Im(b_n)|'})
+    set(gca, 'YScale', 'log');
+    
     b_n_H2 = zeros(2*maxN+1, 1);
     for n=-maxN:maxN
         b_n_H2(n+maxN+1) = b_n(n+maxN+1)*besselh(n,2,ka);
@@ -49,8 +52,11 @@ an_H2p = @(n, ka) -(1j)^(-n)*( ...
         a_n_H2p(n+maxN+1) = an_H2p(n, ka);
     end
     figure(21);
-    plot(-maxN:maxN, real(a_n_H2p), -maxN:maxN, imag(a_n_H2p));
-    xlabel('index n');title('a_n \cdot H^{(2)}_n(k\rho) | \rho = radius'); legend({'Re()','Im()'})
+    % plot(-maxN:maxN, real(a_n_H2p), -maxN:maxN, imag(a_n_H2p));
+    % xlabel('index n');title('a_n \cdot H^{(2)}_n(k\rho) | \rho = radius'); legend({'Re()','Im()'})
+    plot(-maxN:maxN, abs(real(a_n_H2p)), -maxN:maxN, abs(imag(a_n_H2p)));
+    xlabel('index n');title('a_n \cdot H^{(2)}_n(k\rho) | \rho = radius'); legend({'|Re()|','|Im()|'});
+    set(gca, 'YScale', 'log');
     
     exp_theta = exp(1j* (-maxN:maxN).*theta);
     curlE_scatt_phi = -exp_theta*(a_n_H2p*k0); 

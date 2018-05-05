@@ -34,11 +34,14 @@ exp_gamma = 1.7810724179901979852; % == exp(0.577215664901532 the Euler–Maschero
 % legend('show'); % kind of different in 2018a
 
 %% define geometry
-N = 500;
+% N = 500;
+% r = 1*lambda_;
+scatter_geometry;
+
 theta = linspace(0, 2*pi, N+1).'; theta(end) = []; % column
 d_theta = 2*pi/N;
 
-r = 1*lambda_;
+%up% r = 1*lambda_;
 s_n = r*d_theta;
 % [-d_theta/2, +d_theta/2], ...
 xx = r*cos(theta); yy = r*sin(theta);
@@ -58,14 +61,14 @@ idealJ;
 
 figure(2);
 ax2_1=subplot(4,1,[1 2 3]); hold on;
-plot(theta*(180/pi),abs(J)/H_inc_0); xlim([0, 360]); 
+plot(theta*(180/pi),abs(J)/H_inc_0); xlim([0, 360]);
 % xlabel('\phi (degree)');
 ylabel('J_s / H_0');
 xticks([0, 90, 180, 270, 360]);
 
 figure(2);
 ax2_2=subplot(4,1,4); hold on;
-plot(theta*(180/pi),( abs(J-J_ideal) ) / H_inc_0); xlim([0, 360]); 
+plot(theta*(180/pi),( abs(J-J_ideal) ) / H_inc_0); xlim([0, 360]);
 xlabel('\phi (degree)'); ylabel('|J_s-J^*_s| / H_0');
 xticks([0, 90, 180, 270, 360]);
 

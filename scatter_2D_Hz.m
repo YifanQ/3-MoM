@@ -33,12 +33,15 @@ exp_gamma = 1.7810724179901979852; % == exp(0.577215664901532 the Euler–Masche
 % plot(k0r,imag(G0_k0r), 'DisplayName', 'imag(G0)');
 % legend('show'); % kind of different in 2018a
 
-%%
-N = 500;
+%% define geometry
+% N = 500;
+% r = 1*lambda_;
+scatter_geometry;
+
 theta = linspace(0, 2*pi, N+1).'; theta(end) = []; % column
 d_theta = 2*pi/N;
 
-r = 1*lambda_;
+%up% r = 1*lambda_;
 s_n = r*d_theta;
 % [-d_theta/2, +d_theta/2], ...
 xx = r*cos(theta); yy = r*sin(theta);
